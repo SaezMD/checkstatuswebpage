@@ -10,4 +10,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY monitor_reservas.py .
 
 # Ejecutar el script
-CMD ["python", "monitor_reservas.py"]
+CMD ["python", "-u", "monitor_reservas.py"]
