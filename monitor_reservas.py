@@ -136,8 +136,8 @@ def monitorizar():
       if estado_actual:
         mensaje = (
             "🚨 *¡Cambio en la disponibilidad de reservas!*\n\nSe han"
-            f" detectado {len(estado_actual)} días libres"
-            f" (`diavalidor`).\nFechas/Días detectados:"
+            f" detectado {len(estado_actual)} días libres."
+            f" \nFechas/Días detectados:"
             f" `{sorted(list(estado_actual))}`\n\n🔗 [Acceder a la"
             f" web]({URL_PRINCIPAL})"
         )
