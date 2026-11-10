@@ -9,6 +9,11 @@ Script en Python diseñado para monitorizar de forma automática y recurrente la
 * **Protección Anti-caídas**: Si el servidor del QNAP no responde o da timeout, el script omite el ciclo de forma segura sin vaciar su memoria de estado, evitando falsos positivos al recuperarse.
 * **Preparado para Contenedores**: Diseñado para ejecutarse de manera ligera y permanente 24/7 en servidores Docker / Portainer.
 
+## ChangeLogs
+V1.1 - Start
+V1.2 - Added smart notification
+V1.3 - Added weekly log
+
 ---
 
 ## 🛠️ Estructura del Repositorio
@@ -19,3 +24,6 @@ Tu repositorio debe contener los siguientes archivos:
 ├── requirements.txt       # Dependencias necesarias
 ├── Dockerfile             # Configuración para empaquetar la imagen Docker
 └── docker-compose.yml     # Definición del stack para Portainer
+
+
+
