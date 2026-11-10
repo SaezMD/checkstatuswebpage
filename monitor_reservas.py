@@ -38,6 +38,26 @@ HEADERS = {
     "Referer": URL_PRINCIPAL,
 }
 
+# --- SISTEMA DE LOGS POR SEMANAS ---
+LOG_DIR = "/app/logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+def escribir_log(mensaje):
+  ahora = datetime.now()
+  # Obtenemos año y número de semana (ej: 2026 y semana 46 -> log_2026_W46.txt)
+  año, semana, _ = ahora.isocalendar()
+  nombre_archivo = f"log_{año}_W{semana:02d}.txt"
+  ruta_archivo = os.path.join(LOG_DIR, nombre_archivo)
+
+  linea = f"[{ahora}] {mensaje}"
+  print(linea, flush=True)  # Muestra en consola de Docker de forma inmediata
+
+  try:
+    with open(ruta_archivo, "a", encoding="utf-8") as f:
+      f.write(linea + "\n")
+  except Exception as e:
+    print(f"[{ahora}] ❌ Error al escribir en el archivo de log: {e}", flush=True)
+
 
 def enviar_alerta_telegram(mensaje):
   url_api = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -49,14 +69,17 @@ def enviar_alerta_telegram(mensaje):
   try:
     response = requests.post(url_api, data=payload, timeout=10)
     if response.status_code == 200:
-      print(f"[{datetime.now()}] Alerta enviada con éxito por Telegram.")
+      escribir_log("Alerta enviada con éxito por Telegram.")
+      return True
     else:
-      print(
-          f"[{datetime.now()}] Error al enviar Telegram:"
-          f" {response.status_code} - {response.text}"
+      escribir_log(
+          f"❌ Error al enviar Telegram (Código {response.status_code}):"
+          f" {response.text}"
       )
+      return False
   except Exception as e:
-    print(f"[{datetime.now()}] Excepción al conectar con Telegram: {e}")
+    escribir_log(f"❌ Excepción al conectar con Telegram: {e}")
+    return False
 
 
 def obtener_siguiente_mes(año, mes):
@@ -86,26 +109,18 @@ def obtener_dias_mes(año, mes):
         dias_set.add(f"{año}-{mes:02d}-{texto_dia}")
       return dias_set
     else:
-      print(
-          f"[{datetime.now()}] Error HTTP al consultar mes {mes}/{año}:"
-          f" {response.status_code}"
-      )
+      escribir_log(f"Error HTTP al consultar mes {mes}/{año}: Código {response.status_code}")
       return None
 
   except Exception as e:
-    print(
-        f"[{datetime.now()}] Error de conexión al consultar mes {mes}/{año}:"
-        f" {e}"
-    )
+    escribir_log(f"Error de conexión al consultar mes {mes}/{año}: {e}")
+
     return None
 
 
 def monitorizar():
   estado_anterior = set()
-
-  print(
-      "--- Bot Monitor de Reservas (Entorno Docker) Iniciado ---"
-  )
+  escribir_log("--- Bot Monitor de Reservas (Logs Semanales) Iniciado ---")
 
   while True:
     ahora = datetime.now()
@@ -114,8 +129,8 @@ def monitorizar():
         año_actual, mes_actual
     )
 
-    print(
-        f"[{datetime.now()}] Comprobando meses: {mes_actual}/{año_actual} y"
+    escribir_log(
+        f"Comprobando meses: {mes_actual}/{año_actual} y"
         f" {mes_siguiente}/{año_siguiente}..."
     )
 
@@ -123,10 +138,7 @@ def monitorizar():
     dias_siguiente_set = obtener_dias_mes(año_siguiente, mes_siguiente)
 
     if dias_actual_set is None or dias_siguiente_set is None:
-      print(
-          f"[{datetime.now()}] ⚠️ La web no responde correctamente. Omitiendo"
-          " ciclo y manteniendo estado anterior intacto."
-      )
+      escribir_log("⚠️ La web no responde correctamente. Omitiendo ciclo.")
       time.sleep(INTERVALO_SEGUNDOS)
       continue
 
@@ -142,25 +154,16 @@ def monitorizar():
             f" web]({URL_PRINCIPAL})"
         )
         enviar_alerta_telegram(mensaje)
-        print(
-            f"[{datetime.now()}] ¡Novedad! Disponibilidad modificada."
-            f" Notificación enviada."
-        )
+        escribir_log(f"¡Novedad detallada notificada con éxito por Telegram! {sorted(list(estado_actual))}")
+
       else:
-        print(
-            f"[{datetime.now()}] Las plazas disponibles se han agotado."
-            " Actualizando estado."
-        )
+        escribir_log("Las plazas disponibles se han agotado. Actualizando estado.")
 
       estado_anterior = estado_actual
     else:
-      print(
-          f"[{datetime.now()}] Sin cambios en la disponibilidad respecto a la"
-          " última comprobación."
-      )
+      escribir_log("Sin cambios en la disponibilidad respecto a la última comprobación.")
 
     time.sleep(INTERVALO_SEGUNDOS)
-
 
 if __name__ == "__main__":
   monitorizar()
