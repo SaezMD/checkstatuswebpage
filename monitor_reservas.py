@@ -120,7 +120,7 @@ def obtener_dias_mes(año, mes):
 
 def monitorizar():
   estado_anterior = set()
-  escribir_log("--- Bot Monitor de Reservas (Logs Semanales) Iniciado ---")
+  escribir_log("--- Bot Monitor de Reservas V1.3 (Logs Semanales) ** Iniciado ** ---")
 
   while True:
     ahora = datetime.now()
